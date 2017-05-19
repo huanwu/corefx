@@ -3,6 +3,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
   <PropertyGroup>
     <ProjectGuid>{80958E8B-2FEB-4F95-83F9-825CA1ED26F8}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AssemblyName>Microsoft.XmlSerializer.Generator</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <StringResourcesPath>..\..\System.Private.Xml\src\Resources\Strings.resx</StringResourcesPath>
@@ -10,9 +11,9 @@
     <SourceDir>..\..\System.Private.Xml\src</SourceDir>
   </PropertyGroup>
   <!-- Default configurations to help VS understand the options -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netstandard-Debug|AnyCPU'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netstandard-Release|AnyCPU'" />
-  <ItemGroup Condition="'$(TargetGroup)' == 'netstandard'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netcoreapp-Debug|AnyCPU'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netcoreapp-Release|AnyCPU'" />
+  <ItemGroup>
     <Compile Include="$(CommonPath)\System\CSharpHelpers.cs" />
     <Compile Include="$(CommonPath)\System\LocalAppContext.cs" />
     <Compile Include="$(SourceDir)\System\Xml\BinHexDecoder.cs">
@@ -161,7 +162,35 @@
     <Compile Include="System\Xml\Serialization\XmlRootAttributeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Win32.Primitives" />
+    <Reference Include="System.Collections" />
+    <Reference Include="System.Collections.NonGeneric" />
+    <Reference Include="System.Diagnostics.Contracts" />
+    <Reference Include="System.Diagnostics.Debug" />
+    <Reference Include="System.Diagnostics.Tracing" />
+    <Reference Include="System.Diagnostics.Tools" />
     <Reference Include="System.Resources.ResourceManager" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Runtime.Extensions" />
+    <Reference Include="System.Runtime.InteropServices" />
+    <Reference Include="System.Security.Claims" />
+    <Reference Include="System.Security.Principal.Windows" />
+    <Reference Include="System.Threading" />
+    <Reference Include="System.Threading.Overlapped" />
+    <Reference Include="System.Threading.ThreadPool" />
+    <Reference Include="System.Xml.ReaderWriter" />
+    <Reference Include="System.Xml.XDocument" />
+    <Reference Include="System.Xml.XmlDocument" />
+    <Reference Include="System.Xml.XmlSerializer" />
+    <Reference Include="System.Xml.XPath" />
+    <Reference Include="System.IO.FileSystem" />
+    <Reference Include="System.Console" />
+    <Reference Include="System.Threading.Thread" />
+    <Reference Include="System.Text.Encoding.Extensions" />
+    <Reference Include="System.Collections.Immutable" />
+    <Reference Include="System.Linq" />
+    <Reference Include="System.Linq.Expressions" />
+    <Reference Include="System.Linq.Parallel" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\$(AssemblyName).rd.xml" />
