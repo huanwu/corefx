@@ -1,0 +1,22 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v2.0"
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v2.0": {
+      "Microsoft.XmlSerializer.Generator/1.0.0": {
+        "runtime": {
+          "Microsoft.XmlSerializer.Generator.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.XmlSerializer.Generator/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
