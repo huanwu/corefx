@@ -443,7 +443,7 @@ namespace System.Xml.Serialization
                     if (item is XmlSchemaType)
                     {
                         XmlSchemaType type = (XmlSchemaType)item;
-                        if (type.DerivedFrom == baseName && TypesInUse[type.Name, schema.TargetNamespace] == null)
+                        if (type.DerivedFrom == baseName && TypesInUse[type.Name, schema.TargetNamespace, schema.TargetNamespace] == null)
                         {
                             ImportType(type.QualifiedName, typeof(TypeMapping), null, TypeFlags.CanBeElementValue, false);
                         }
@@ -1018,7 +1018,7 @@ namespace System.Xml.Serialization
             if (scope == null)
                 return;
 
-            ElementAccessor scopeElement = (ElementAccessor)scope[element.Name, element.Namespace];
+            ElementAccessor scopeElement = (ElementAccessor)scope[element.Name, element.Namespace, element.Mapping.TypeDesc.FullName];
             if (scopeElement != null)
             {
                 if (!allowDuplicates)
@@ -1033,7 +1033,7 @@ namespace System.Xml.Serialization
             }
             else
             {
-                scope[element.Name, element.Namespace] = element;
+                scope[element.Name, element.Namespace, element.Mapping.TypeDesc.FullName] = element;
             }
         }
 

@@ -302,11 +302,11 @@ namespace System.Xml.Serialization
             if (accessor.Any && accessor.Name.Length == 0)
                 return accessor;
 
-            Accessor existing = (Accessor)accessors[accessor.Name, accessor.Namespace];
+            Accessor existing = (Accessor)accessors[accessor.Name, accessor.Namespace, accessor.Mapping.TypeDesc.FullName];
             if (existing == null)
             {
                 accessor.IsTopLevelInSchema = true;
-                accessors.Add(accessor.Name, accessor.Namespace, accessor);
+                accessors.Add(accessor.Name, accessor.Namespace, accessor.Mapping.TypeDesc.FullName, accessor);
                 return accessor;
             }
 
@@ -340,7 +340,7 @@ namespace System.Xml.Serialization
                     throw new InvalidOperationException(SR.Format(SR.XmlCannotReconcileAccessor, accessor.Name, accessor.Namespace, GetMappingName(existing.Mapping), GetMappingName(accessor.Mapping)));
                 }
                 ArrayMapping mapping = (ArrayMapping)accessor.Mapping;
-                ArrayMapping existingMapping = mapping.IsAnonymousType ? null : (ArrayMapping)_types[existing.Mapping.TypeName, existing.Mapping.Namespace];
+                ArrayMapping existingMapping = mapping.IsAnonymousType ? null : (ArrayMapping)_types[existing.Mapping.TypeName, existing.Mapping.Namespace, existing.Mapping.TypeDesc.FullName];
                 ArrayMapping first = existingMapping;
                 while (existingMapping != null)
                 {
@@ -350,7 +350,7 @@ namespace System.Xml.Serialization
                 }
                 mapping.Next = first;
                 if (!mapping.IsAnonymousType)
-                    _types[existing.Mapping.TypeName, existing.Mapping.Namespace] = mapping;
+                    _types[existing.Mapping.TypeName, existing.Mapping.Namespace, existing.Mapping.TypeDesc.FullName] = mapping;
                 return existing;
             }
             if (accessor is AttributeAccessor)
@@ -642,7 +642,7 @@ namespace System.Xml.Serialization
             TypeMapping existingMapping;
             if (!baseMapping.IsAnonymousType)
             {
-                existingMapping = (TypeMapping)_nullables[baseMapping.TypeName, baseMapping.Namespace];
+                existingMapping = (TypeMapping)_nullables[baseMapping.TypeName, baseMapping.Namespace, baseMapping.TypeDesc.FullName];
             }
             else
             {
@@ -679,7 +679,7 @@ namespace System.Xml.Serialization
             mapping.IncludeInSchema = baseMapping.IncludeInSchema;
             if (!baseMapping.IsAnonymousType)
             {
-                _nullables.Add(baseMapping.TypeName, baseMapping.Namespace, mapping);
+                _nullables.Add(baseMapping.TypeName, baseMapping.Namespace, baseMapping.TypeDesc.FullName, mapping);
             }
             else
             {
@@ -706,7 +706,7 @@ namespace System.Xml.Serialization
             if (typeName == null || typeName.Length == 0)
                 mapping = type == null ? null : (TypeMapping)_anonymous[type];
             else
-                mapping = (TypeMapping)typeLib[typeName, ns];
+                mapping = (TypeMapping)typeLib[typeName, ns, typeDesc.FullName];
 
             if (mapping == null) return null;
             if (!mapping.IsAnonymousType && mapping.TypeDesc != typeDesc)
@@ -737,7 +737,7 @@ namespace System.Xml.Serialization
                 mapping.Namespace = typeNs;
                 mapping.TypeName = typeName;
                 if (!mapping.IsAnonymousType)
-                    _types.Add(typeName, typeNs, mapping);
+                    _types.Add(typeName, typeNs, model.TypeDesc.FullName, mapping);
                 else
                     _anonymous[model.Type] = mapping;
                 if (a.XmlType != null)
@@ -1056,7 +1056,7 @@ namespace System.Xml.Serialization
 
             string uniqueName = name = generateTypeName ? "ArrayOf" + CodeIdentifier.MakePascal(name) : name;
             int i = 1;
-            TypeMapping existingMapping = (TypeMapping)_types[uniqueName, ns];
+            TypeMapping existingMapping = (TypeMapping)_types[uniqueName, ns, mapping.TypeDesc.FullName];
             while (existingMapping != null)
             {
                 if (existingMapping is ArrayMapping)
@@ -1069,7 +1069,7 @@ namespace System.Xml.Serialization
                 }
                 // need to re-name the mapping
                 uniqueName = name + i.ToString(CultureInfo.InvariantCulture);
-                existingMapping = (TypeMapping)_types[uniqueName, ns];
+                existingMapping = (TypeMapping)_types[uniqueName, ns, mapping.TypeDesc.FullName];
                 i++;
             }
             mapping.TypeName = uniqueName;
@@ -1099,7 +1099,7 @@ namespace System.Xml.Serialization
             // in the case of an ArrayMapping we can have more that one mapping correspond to a type
             // examples of that are ArrayList and object[] both will map tp ArrayOfur-type
             // so we create a link list for all mappings of the same XSD type
-            ArrayMapping existingMapping = (ArrayMapping)_types[mapping.TypeName, mapping.Namespace];
+            ArrayMapping existingMapping = (ArrayMapping)_types[mapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName];
             if (existingMapping != null)
             {
                 ArrayMapping first = existingMapping;
@@ -1111,14 +1111,14 @@ namespace System.Xml.Serialization
                 }
                 mapping.Next = first;
                 if (!mapping.IsAnonymousType)
-                    _types[mapping.TypeName, mapping.Namespace] = mapping;
+                    _types[mapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName] = mapping;
                 else
                     _anonymous[model.Type] = mapping;
                 return mapping;
             }
             _typeScope.AddTypeMapping(mapping);
             if (!mapping.IsAnonymousType)
-                _types.Add(mapping.TypeName, mapping.Namespace, mapping);
+                _types.Add(mapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName, mapping);
             else
                 _anonymous[model.Type] = mapping;
             return mapping;
@@ -1194,7 +1194,7 @@ namespace System.Xml.Serialization
                 mapping.IsList = repeats;
                 mapping.IncludeInSchema = a.XmlType == null ? true : a.XmlType.IncludeInSchema;
                 if (!mapping.IsAnonymousType)
-                    _types.Add(typeName, typeNs, mapping);
+                    _types.Add(typeName, typeNs, model.TypeDesc.FullName, mapping);
                 else
                     _anonymous[model.Type] = mapping;
                 ArrayList constants = new ArrayList();
@@ -1663,13 +1663,13 @@ namespace System.Xml.Serialization
                             throw new InvalidOperationException(SR.Format(SR.XmlIllegalAnyElement, arrayElementType.FullName));
                         string anyName = xmlAnyElement.Name.Length == 0 ? xmlAnyElement.Name : XmlConvert.EncodeLocalName(xmlAnyElement.Name);
                         string anyNs = xmlAnyElement.GetNamespaceSpecified() ? xmlAnyElement.Namespace : null;
-                        if (anys[anyName, anyNs] != null)
+                        if (anys[anyName, anyNs, anyName] != null)
                         {
                             // ignore duplicate anys
                             continue;
                         }
-                        anys[anyName, anyNs] = xmlAnyElement;
-                        if (elements[anyName, (anyNs == null ? ns : anyNs)] != null)
+                        anys[anyName, anyNs, anyName] = xmlAnyElement;
+                        if (elements[anyName, (anyNs == null ? ns : anyNs), anyName] != null)
                         {
                             throw new InvalidOperationException(SR.Format(SR.XmlAnyElementDuplicate, accessorName, xmlAnyElement.Name, xmlAnyElement.Namespace == null ? "null" : xmlAnyElement.Namespace));
                         }
@@ -1693,7 +1693,7 @@ namespace System.Xml.Serialization
                             CheckForm(element.Form, ns != element.Namespace);
                             element = ReconcileLocalAccessor(element, ns);
                         }
-                        elements.Add(element.Name, element.Namespace, element);
+                        elements.Add(element.Name, element.Namespace, element.Name, element);
                         elementList.Add(element);
                         if (xmlAnyElement.Order != -1)
                         {
@@ -1907,13 +1907,13 @@ namespace System.Xml.Serialization
 
                         string anyName = xmlAnyElement.Name.Length == 0 ? xmlAnyElement.Name : XmlConvert.EncodeLocalName(xmlAnyElement.Name);
                         string anyNs = xmlAnyElement.GetNamespaceSpecified() ? xmlAnyElement.Namespace : null;
-                        if (anys[anyName, anyNs] != null)
+                        if (anys[anyName, anyNs, anyName] != null)
                         {
                             // ignore duplicate anys
                             continue;
                         }
-                        anys[anyName, anyNs] = xmlAnyElement;
-                        if (elements[anyName, (anyNs == null ? ns : anyNs)] != null)
+                        anys[anyName, anyNs, anyName] = xmlAnyElement;
+                        if (elements[anyName, (anyNs == null ? ns : anyNs), anyName] != null)
                         {
                             throw new InvalidOperationException(SR.Format(SR.XmlAnyElementDuplicate, accessorName, xmlAnyElement.Name, xmlAnyElement.Namespace == null ? "null" : xmlAnyElement.Namespace));
                         }
@@ -1943,7 +1943,7 @@ namespace System.Xml.Serialization
                                 throw new InvalidOperationException(SR.Format(SR.XmlSequenceMatch, "Order"));
                             sequenceId = xmlAnyElement.Order;
                         }
-                        elements.Add(element.Name, element.Namespace, element);
+                        elements.Add(element.Name, element.Namespace, element.Name, element);
                         elementList.Add(element);
                     }
                 }
@@ -2088,14 +2088,14 @@ namespace System.Xml.Serialization
                 {
                     Type type = items[i].Type == null ? accessorType : items[i].Type;
                     string ns = items[i].NestingLevel.ToString(CultureInfo.InvariantCulture);
-                    XmlArrayItemAttribute item = (XmlArrayItemAttribute)arrayTypes[type.FullName, ns];
+                    XmlArrayItemAttribute item = (XmlArrayItemAttribute)arrayTypes[type.FullName, ns, type.FullName];
                     if (item != null)
                     {
                         throw new InvalidOperationException(SR.Format(SR.XmlArrayItemAmbiguousTypes, accessorName, item.ElementName, items[i].ElementName, typeof(XmlElementAttribute).Name, typeof(XmlChoiceIdentifierAttribute).Name, accessorName));
                     }
                     else
                     {
-                        arrayTypes[type.FullName, ns] = items[i];
+                        arrayTypes[type.FullName, ns, type.FullName] = items[i];
                     }
                 }
             }
@@ -2111,12 +2111,12 @@ namespace System.Xml.Serialization
                 string choiceName = colon < 0 ? choiceId : choiceId.Substring(colon + 1);
                 string choiceNs = colon < 0 ? "" : choiceId.Substring(0, colon);
 
-                if (ids[choiceName, choiceNs] != null)
+                if (ids[choiceName, choiceNs, choiceMapping.TypeDesc.FullName] != null)
                 {
                     // Enum values in the XmlChoiceIdentifier '{0}' have to be unique.  Value '{1}' already present.
                     throw new InvalidOperationException(SR.Format(SR.XmlChoiceIdDuplicate, choiceMapping.TypeName, choiceId));
                 }
-                ids.Add(choiceName, choiceNs, choiceMapping.Constants[i]);
+                ids.Add(choiceName, choiceNs, choiceMapping.TypeDesc.FullName, choiceMapping.Constants[i]);
             }
         }
 
@@ -2163,7 +2163,7 @@ namespace System.Xml.Serialization
 
         private static void AddUniqueAccessor(INameScope scope, Accessor accessor)
         {
-            Accessor existing = (Accessor)scope[accessor.Name, accessor.Namespace];
+            Accessor existing = (Accessor)scope[accessor.Name, accessor.Namespace, accessor.Mapping.TypeDesc.FullName];
             if (existing != null)
             {
                 if (accessor is ElementAccessor)
@@ -2181,7 +2181,7 @@ namespace System.Xml.Serialization
             }
             else
             {
-                scope[accessor.Name, accessor.Namespace] = accessor;
+                scope[accessor.Name, accessor.Namespace, accessor.Mapping.TypeDesc.FullName] = accessor;
             }
         }
 

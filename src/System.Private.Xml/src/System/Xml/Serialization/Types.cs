@@ -641,7 +641,7 @@ namespace System.Xml.Serialization
             if (s_primitiveTypes[type] == null)
                 s_primitiveTypes.Add(type, typeDesc);
             s_primitiveDataTypes.Add(dataType, typeDesc);
-            s_primitiveNames.Add(dataTypeName, XmlSchema.Namespace, typeDesc);
+            s_primitiveNames.Add(dataTypeName, XmlSchema.Namespace, dataTypeName, typeDesc);
         }
 
         private static void AddNonXsdPrimitive(Type type, string dataTypeName, string ns, string formatterName, XmlQualifiedName baseTypeName, XmlSchemaFacet[] facets, TypeFlags flags)
@@ -659,7 +659,7 @@ namespace System.Xml.Serialization
             if (s_primitiveTypes[type] == null)
                 s_primitiveTypes.Add(type, typeDesc);
             s_primitiveDataTypes.Add(dataType, typeDesc);
-            s_primitiveNames.Add(dataTypeName, ns, typeDesc);
+            s_primitiveNames.Add(dataTypeName, ns, dataTypeName, typeDesc);
         }
 
         private static void AddSoapEncodedPrimitive(Type type, string dataTypeName, string ns, string formatterName, XmlQualifiedName baseTypeName, TypeFlags flags)
@@ -674,7 +674,7 @@ namespace System.Xml.Serialization
 
         internal TypeDesc GetTypeDesc(string name, string ns, TypeFlags flags)
         {
-            TypeDesc typeDesc = (TypeDesc)s_primitiveNames[name, ns];
+            TypeDesc typeDesc = (TypeDesc)s_primitiveNames[name, ns, name];
             if (typeDesc != null)
             {
                 if ((typeDesc.Flags & flags) != 0)

@@ -526,20 +526,20 @@ namespace System.Xml.Serialization
                 return _attributes;
             }
         }
-        object INameScope.this[string name, string ns]
+        object INameScope.this[string name, string ns, string fullName]
         {
             get
             {
-                object named = LocalElements[name, ns];
+                object named = LocalElements[name, ns, fullName];
                 if (named != null)
                     return named;
                 if (_baseMapping != null)
-                    return ((INameScope)_baseMapping)[name, ns];
+                    return ((INameScope)_baseMapping)[name, ns, fullName];
                 return null;
             }
             set
             {
-                LocalElements[name, ns] = value;
+                LocalElements[name, ns, fullName] = value;
             }
         }
         internal StructMapping NextDerivedMapping

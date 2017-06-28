@@ -17,28 +17,30 @@ namespace System.Xml.Serialization
     {
         private string _ns;
         private string _name;
+        private string _fullName;
 
-        internal NameKey(string name, string ns)
+        internal NameKey(string name, string ns, string fullName)
         {
             _name = name;
             _ns = ns;
+            _fullName = fullName;
         }
 
         public override bool Equals(object other)
         {
             if (!(other is NameKey)) return false;
             NameKey key = (NameKey)other;
-            return _name == key._name && _ns == key._ns;
+            return _name == key._name && _ns == key._ns && _fullName == key._fullName;
         }
 
         public override int GetHashCode()
         {
-            return (_ns == null ? "<null>".GetHashCode() : _ns.GetHashCode()) ^ (_name == null ? 0 : _name.GetHashCode());
+            return (_ns == null ? "<null>".GetHashCode() : _ns.GetHashCode()) ^ (_name == null ? 0 : _name.GetHashCode() ^ (_fullName == null ? 0 : _fullName.GetHashCode()));
         }
     }
     internal interface INameScope
     {
-        object this[string name, string ns] { get; set; }
+        object this[string name, string ns, string fullName] { get; set; }
     }
     internal class NameTable : INameScope
     {
@@ -46,12 +48,12 @@ namespace System.Xml.Serialization
 
         internal void Add(XmlQualifiedName qname, object value)
         {
-            Add(qname.Name, qname.Namespace, value);
+            Add(qname.Name, qname.Namespace, qname.Name, value);
         }
 
-        internal void Add(string name, string ns, object value)
+        internal void Add(string name, string ns, string fullName, object value)
         {
-            NameKey key = new NameKey(name, ns);
+            NameKey key = new NameKey(name, ns, fullName);
             _table.Add(key, value);
         }
 
@@ -60,36 +62,36 @@ namespace System.Xml.Serialization
             get
             {
                 object obj;
-                return _table.TryGetValue(new NameKey(qname.Name, qname.Namespace), out obj) ? obj : null;
+                return _table.TryGetValue(new NameKey(qname.Name, qname.Namespace, qname.Name), out obj) ? obj : null;
             }
             set
             {
-                _table[new NameKey(qname.Name, qname.Namespace)] = value;
+                _table[new NameKey(qname.Name, qname.Namespace, qname.Name)] = value;
             }
         }
-        internal object this[string name, string ns]
+        internal object this[string name, string ns, string fullName]
         {
             get
             {
                 object obj;
-                return _table.TryGetValue(new NameKey(name, ns), out obj) ? obj : null;
+                return _table.TryGetValue(new NameKey(name, ns, fullName), out obj) ? obj : null;
             }
             set
             {
-                _table[new NameKey(name, ns)] = value;
+                _table[new NameKey(name, ns, fullName)] = value;
             }
         }
-        object INameScope.this[string name, string ns]
+        object INameScope.this[string name, string ns, string fullName]
         {
             get
             {
                 object obj;
-                _table.TryGetValue(new NameKey(name, ns), out obj);
+                _table.TryGetValue(new NameKey(name, ns, fullName), out obj);
                 return obj;
             }
             set
             {
-                _table[new NameKey(name, ns)] = value;
+                _table[new NameKey(name, ns, fullName)] = value;
             }
         }
 

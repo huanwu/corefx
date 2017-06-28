@@ -289,7 +289,7 @@ namespace System.Xml.Serialization
 
         private TypeMapping GetTypeMapping(string typeName, string ns, TypeDesc typeDesc)
         {
-            TypeMapping mapping = (TypeMapping)_types[typeName, ns];
+            TypeMapping mapping = (TypeMapping)_types[typeName, ns, typeDesc.FullName];
             if (mapping == null) return null;
             if (mapping.TypeDesc != typeDesc)
                 throw new InvalidOperationException(SR.Format(SR.XmlTypesDuplicate, typeDesc.FullName, mapping.TypeDesc.FullName, typeName, ns));
@@ -299,7 +299,7 @@ namespace System.Xml.Serialization
         private NullableMapping CreateNullableMapping(TypeMapping baseMapping, Type type)
         {
             TypeDesc typeDesc = baseMapping.TypeDesc.GetNullableTypeDesc(type);
-            TypeMapping existingMapping = (TypeMapping)_nullables[baseMapping.TypeName, baseMapping.Namespace];
+            TypeMapping existingMapping = (TypeMapping)_nullables[baseMapping.TypeName, baseMapping.Namespace, typeDesc.FullName];
             NullableMapping mapping;
             if (existingMapping != null)
             {
@@ -328,7 +328,7 @@ namespace System.Xml.Serialization
             mapping.TypeName = baseMapping.TypeName;
             mapping.Namespace = baseMapping.Namespace;
             mapping.IncludeInSchema = false; //baseMapping.IncludeInSchema;
-            _nullables.Add(baseMapping.TypeName, mapping.Namespace, mapping);
+            _nullables.Add(baseMapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName, mapping);
             _typeScope.AddTypeMapping(mapping);
             return mapping;
         }
@@ -355,7 +355,7 @@ namespace System.Xml.Serialization
                 mapping.TypeName = typeName;
                 if (a.SoapType != null) mapping.IncludeInSchema = a.SoapType.IncludeInSchema;
                 _typeScope.AddTypeMapping(mapping);
-                _types.Add(typeName, typeNs, mapping);
+                _types.Add(typeName, typeNs, mapping.TypeDesc.FullName, mapping);
                 if (limiter.IsExceededLimit)
                 {
                     limiter.DeferredWorkItems.Add(new ImportStructWorkItem(model, mapping));
@@ -473,7 +473,7 @@ namespace System.Xml.Serialization
             // in the case of an ArrayMapping we can have more that one mapping correspond to a type
             // examples of that are ArrayList and object[] both will map tp ArrayOfur-type
             // so we create a link list for all mappings of the same XSD type
-            ArrayMapping existingMapping = (ArrayMapping)_types[mapping.TypeName, mapping.Namespace];
+            ArrayMapping existingMapping = (ArrayMapping)_types[mapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName];
             if (existingMapping != null)
             {
                 ArrayMapping first = existingMapping;
@@ -484,11 +484,11 @@ namespace System.Xml.Serialization
                     existingMapping = existingMapping.Next;
                 }
                 mapping.Next = first;
-                _types[mapping.TypeName, mapping.Namespace] = mapping;
+                _types[mapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName] = mapping;
                 return mapping;
             }
             _typeScope.AddTypeMapping(mapping);
-            _types.Add(mapping.TypeName, mapping.Namespace, mapping);
+            _types.Add(mapping.TypeName, mapping.Namespace, mapping.TypeDesc.FullName, mapping);
             IncludeTypes(model.Type);
             return mapping;
         }
@@ -546,7 +546,7 @@ namespace System.Xml.Serialization
             string uniqueName = "ArrayOf" + itemTypeName;
             string ns = useDefaultNs ? _defaultNs : itemTypeNamespace;
             int i = 1;
-            TypeMapping existingMapping = (TypeMapping)_types[uniqueName, ns];
+            TypeMapping existingMapping = (TypeMapping)_types[uniqueName, ns, mapping.TypeDesc.FullName];
             while (existingMapping != null)
             {
                 if (existingMapping is ArrayMapping)
@@ -559,7 +559,7 @@ namespace System.Xml.Serialization
                 }
                 // need to re-name the mapping
                 uniqueName = itemTypeName + i.ToString(CultureInfo.InvariantCulture);
-                existingMapping = (TypeMapping)_types[uniqueName, ns];
+                existingMapping = (TypeMapping)_types[uniqueName, ns, mapping.TypeDesc.FullName];
                 i++;
             }
             mapping.Namespace = ns;
@@ -611,7 +611,7 @@ namespace System.Xml.Serialization
                 mapping.Namespace = typeNs;
                 mapping.IsFlags = model.Type.IsDefined(typeof(FlagsAttribute), false);
                 _typeScope.AddTypeMapping(mapping);
-                _types.Add(typeName, typeNs, mapping);
+                _types.Add(typeName, typeNs, mapping.TypeDesc.FullName, mapping);
                 ArrayList constants = new ArrayList();
                 for (int i = 0; i < model.Constants.Length; i++)
                 {
